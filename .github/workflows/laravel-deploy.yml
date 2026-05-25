@@ -6,48 +6,32 @@ on:
       - main
 
 env:
-  IMAGE_NAME: "${{ secrets.DOCKER_USER }}/ANNISADWIWISESA-simple-social-media"
+  IMAGE_NAME: "${{ secrets.DOCKER_USER }}/annisadwiwisesa-simple-social-media"
   DOCKER_USER: "${{ secrets.DOCKER_USER }}"
 
 jobs:
   run-mysql-in-docker:
     runs-on: self-hosted
     steps:
-      - name: Delete container mysql if exist
-        continue-on-error: true
-        run: docker rm -f mysql || true
-
-      - name: Running mysql in container
-        run: docker run -d --name mysql -e MYSQL_ROOT_PASSWORD=password -e MYSQL_DATABASE=social_media -p 3306:3306 mysql:5.7
+      - run: docker rm -f mysql || true
+      - run: docker run -d --name mysql -e MYSQL_ROOT_PASSWORD=password -e MYSQL_DATABASE=social_media -p 3306:3306 mysql:5.7
 
   build-push-image:
     needs: run-mysql-in-docker
     runs-on: self-hosted
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-
-      - name: Build Image
-        run: docker build -t $IMAGE_NAME .
-
-      - name: Login DockerHub
-        uses: docker/login-action@v3
+      - uses: actions/checkout@v4
+      - run: docker build -t $IMAGE_NAME .
+      - uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USER }}
           password: ${{ secrets.DOCKER_PASS }}
-
-      - name: Push Image
-        run: docker push $IMAGE_NAME
+      - run: docker push $IMAGE_NAME
 
   deploy-social-media:
     needs: build-push-image
     runs-on: self-hosted
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-
-      - name: Stop container
-        run: docker-compose down || true
-
-      - name: Start container
-        run: docker-compose up -d
+      - uses: actions/checkout@v4
+      - run: docker-compose down || true
+      - run: docker-compose up -d
