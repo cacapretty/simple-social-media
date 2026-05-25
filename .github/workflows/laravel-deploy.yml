@@ -1,4 +1,3 @@
-cat > .github/workflows/laravel-deploy.yml << 'EOF'
 name: Laravel application (Mysql)
 
 on:
@@ -14,26 +13,41 @@ jobs:
   run-mysql-in-docker:
     runs-on: self-hosted
     steps:
-      - run: docker rm -f mysql || true
-      - run: docker run -d --name mysql -e MYSQL_ROOT_PASSWORD=password -e MYSQL_DATABASE=social_media -p 3306:3306 mysql:5.7
+      - name: Delete container mysql if exist
+        continue-on-error: true
+        run: docker rm -f mysql || true
+
+      - name: Running mysql in container
+        run: docker run -d --name mysql -e MYSQL_ROOT_PASSWORD=password -e MYSQL_DATABASE=social_media -p 3306:3306 mysql:5.7
 
   build-push-image:
     needs: run-mysql-in-docker
     runs-on: self-hosted
     steps:
-      - uses: actions/checkout@v4
-      - run: docker build -t $IMAGE_NAME .
-      - uses: docker/login-action@v3
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Build Image
+        run: docker build -t $IMAGE_NAME .
+
+      - name: Login DockerHub
+        uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USER }}
           password: ${{ secrets.DOCKER_PASS }}
-      - run: docker push $IMAGE_NAME
+
+      - name: Push Image
+        run: docker push $IMAGE_NAME
 
   deploy-social-media:
     needs: build-push-image
     runs-on: self-hosted
     steps:
-      - uses: actions/checkout@v4
-      - run: docker-compose down
-      - run: docker-compose up -d
-EOF
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Stop container
+        run: docker-compose down || true
+
+      - name: Start container
+        run: docker-compose up -d
