@@ -18,7 +18,7 @@ jobs:
     steps:
       - name: Delete container mysql if exist
         continue-on-error: true
-        run: docker rm -f $(docker ps -a | grep 'mysql\|social\|media' | awk '{print $1}')
+        run: true
 
       - name: Running mysql in container
         run: docker run -d --name mysql -e MYSQL_ROOT_PASSWORD=password -e MYSQL_DATABASE=social_media -p 3306:3306 mysql:5.7
@@ -58,7 +58,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: stop and remove existing container
-        run: docker compose down --rmi all
+        run: docker-compose down
 
       - name: start container
-        run: docker compose-up -d
+        run: docker-compose up -d
