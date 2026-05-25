@@ -61,4 +61,4 @@ jobs:
         run: docker compose down --rmi all
 
       - name: start container
-        run: docker compose up -d
+        run: docker compose-up -d
